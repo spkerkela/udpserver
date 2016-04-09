@@ -34,7 +34,8 @@ server.on('message', (message, remote) => {
       knownClients[remotePort] = {
         lastComm: process.hrtime(),
         position: {x: 0, y: 0},
-        bombs: 3
+        bombs: 3,
+        hitPoints: 1
       };
       var portMessage = new Buffer('port-is::'+remotePort);
       server.send(portMessage,0, portMessage.length, parseInt(remotePort), 'localhost');
@@ -51,7 +52,11 @@ server.on('message', (message, remote) => {
       if(knownClients[remotePort].bombs > 0) {
         console.log(remotePort, 'set up a bomb at', bombPosition);
         knownClients[remotePort].bombs--;
-        gameState.bombs.push(bombPosition);
+        gameState.bombs.push({
+          position: bombPosition,
+          plantedAt: process.hrtime(),
+          exploded: false
+        });
       }
       break;
     case 'move-to':
@@ -93,12 +98,32 @@ pongs.onValue(function () {
 
 updates.onValue(function () {
   const knownClients = gameState.knownClients;
+  const bombs = gameState.bombs;
   const knownKeys = Object.keys(knownClients);
   const curTime = process.hrtime();
+
+  bombs.forEach(bomb => {
+    if(!bomb.exploded) {
+      const end = process.hrtime(bomb.plantedAt);
+      if(end[0] > 3) {
+        bomb.exploded = true;
+        knownKeys.forEach(k => {
+          const pos = knownClients[k].position;
+          const distance = Math.pow(bomb.position.x - pos.x, 2) + Math.pow(bomb.position.y - pos.y, 2)
+          const radius = 5
+          if(distance < Math.pow(radius, 2)) {
+            console.log(k,'TOOK DAMAGE!!');
+            knownClients[k].hitPoints--;
+          }
+        })
+      }
+    }
+  });
+
   knownKeys.forEach(k => {
     const pos = new Buffer('set-pos::'+JSON.stringify(knownClients[k].position));
     server.send(pos, 0, pos.length, parseInt(k), 'localhost');
-    const data = new Buffer('data::'+JSON.stringify(knownClients));
+    const data = new Buffer('data::'+JSON.stringify(gameState));
     server.send(data, 0, data.length, parseInt(k), 'localhost');
   })
 });

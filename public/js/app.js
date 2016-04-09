@@ -19,8 +19,8 @@ function draw() {
   ctx.fillStyle='green';
   var knownClients =  gameState.knownClients;
   gameState.bombs.forEach(function(bomb) {
-    ctx.fillStyle='yellow';
-    ctx.fillRect(rectWidth*bomb.x,rectWidth*bomb.y,rectWidth,rectWidth);
+    ctx.fillStyle= bomb.exploded ? 'grey':'yellow';
+    ctx.fillRect(rectWidth*bomb.position.x,rectWidth*bomb.position.y,rectWidth,rectWidth);
   });
   Object.keys(knownClients).forEach(function (k) {
     ctx.fillStyle='green';
