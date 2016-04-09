@@ -7,6 +7,7 @@ const dgram = require('dgram');
 const server = dgram.createSocket('udp4');
 const express = require('express');
 const app = express();
+app.use(express.static('public'));
 const clientPort = 33334;
 const knownClients = {};
 
@@ -44,8 +45,13 @@ server.on('message', (message, remote) => {
       const direction = JSON.parse(command[1]);
       if(direction) {
         console.log(direction)
-        knownClients[remotePort].position.x += direction.x
-        knownClients[remotePort].position.y += direction.y
+        let destination = {
+          x: knownClients[remotePort].position.x + direction.x,
+          y: knownClients[remotePort].position.y + direction.y
+        }
+        destination.x = Math.min(Math.max(destination.x, 0), 19);
+        destination.y = Math.min(Math.max(destination.y, 0), 19);
+        knownClients[remotePort].position = destination;
       }
       break;
     default:
@@ -82,8 +88,8 @@ updates.onValue(function () {
   })
 });
 
-app.get('/', (req, res) => {
-  res.send(JSON.stringify(knownClients));
+app.get('/api', (req, res) => {
+  res.send(knownClients);
 });
 
 app.listen(8080);
