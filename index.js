@@ -50,7 +50,7 @@ server.on('message', (message, remote) => {
       break;
     case 'set-bomb':
       var bombPosition = knownClients[remotePort].position;
-      if(knownClients[remotePort].bombs > 0) {
+      if(knownClients[remotePort].isAlive && knownClients[remotePort].bombs > 0) {
         console.log(remotePort, 'set up a bomb at', bombPosition);
         knownClients[remotePort].bombs--;
         gameState.bombs.push({
