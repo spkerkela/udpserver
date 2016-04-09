@@ -2,6 +2,10 @@
 const B = require('baconjs');
 const PORT = 33333;
 const HOST = 'localhost';
+const stdin = process.stdin;
+stdin.setRawMode(true);
+stdin.resume();
+stdin.setEncoding('utf8');
 
 const updater = B.repeatedly(16, ['update'])
 
@@ -21,6 +25,22 @@ function send(msg) {
     if(err) throw err;
   });
 }
+
+const directions = {
+  w: {x:0, y:-1},
+  s: {x:0, y:1},
+  a: {x:-1, y:0},
+  d: {x:1, y:0}
+}
+
+stdin.on('data', (key) => {
+    if(key==='\u0003') {
+      process.exit();
+    }
+    if(myPort !== 0 && Object.keys(directions).indexOf(key) !== -1) {
+      send('move-to::'+JSON.stringify(directions[key]));
+    }
+});
 
 client.on('message', (message, remote) => {
   const command = message.toString().split('::');
@@ -48,7 +68,6 @@ updater.takeWhile(() => keepUpdating).onValue(() => {
 });
 
 B.repeatedly(1000,['state']).takeWhile(() => keepUpdating).onValue(() => {
-  console.log('known state of the game', worldState);
 })
 
 send('give-port');

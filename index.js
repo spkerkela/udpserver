@@ -40,6 +40,14 @@ server.on('message', (message, remote) => {
       console.log('setting name of', remotePort,'to', command[1]);
       knownClients[remotePort].name = command[1];
       break;
+    case 'move-to':
+      const direction = JSON.parse(command[1]);
+      if(direction) {
+        console.log(direction)
+        knownClients[remotePort].position.x += direction.x
+        knownClients[remotePort].position.y += direction.y
+      }
+      break;
     default:
   }
 });
@@ -67,8 +75,6 @@ updates.onValue(function () {
   const knownKeys = Object.keys(knownClients);
   const curTime = process.hrtime();
   knownKeys.forEach(k => {
-    knownClients[k].position.x += 0.01;
-    knownClients[k].position.y += 0.01;
     const pos = new Buffer('set-pos::'+JSON.stringify(knownClients[k].position));
     server.send(pos, 0, pos.length, parseInt(k), 'localhost');
     const data = new Buffer('data::'+JSON.stringify(knownClients));
