@@ -9,7 +9,10 @@ const express = require('express');
 const app = express();
 app.use(express.static('public'));
 const clientPort = 33334;
-const knownClients = {};
+const gameState = {
+  bombs: [],
+  knownClients: {}
+};
 
 const pongs = B.repeatedly(1000/3, ['update']);
 const updates = B.repeatedly(16, ['update']);
@@ -21,6 +24,7 @@ server.on('listening', () => {
 
 server.on('message', (message, remote) => {
   const remotePort = remote.port
+  const knownClients = gameState.knownClients;
   if(!knownClients[remotePort]) {
     console.log(remotePort+ ' connected');
   }
@@ -29,7 +33,8 @@ server.on('message', (message, remote) => {
     case 'give-port':
       knownClients[remotePort] = {
         lastComm: process.hrtime(),
-        position: {x: 0, y: 0}
+        position: {x: 0, y: 0},
+        bombs: 3
       };
       var portMessage = new Buffer('port-is::'+remotePort);
       server.send(portMessage,0, portMessage.length, parseInt(remotePort), 'localhost');
@@ -40,6 +45,14 @@ server.on('message', (message, remote) => {
     case 'set-name':
       console.log('setting name of', remotePort,'to', command[1]);
       knownClients[remotePort].name = command[1];
+      break;
+    case 'set-bomb':
+      var bombPosition = knownClients[remotePort].position;
+      if(knownClients[remotePort].bombs > 0) {
+        console.log(remotePort, 'set up a bomb at', bombPosition);
+        knownClients[remotePort].bombs--;
+        gameState.bombs.push(bombPosition);
+      }
       break;
     case 'move-to':
       const direction = JSON.parse(command[1]);
@@ -65,6 +78,7 @@ function tooLong(clientLastComm, currentTime) {
 server.bind(PORT, HOST);
 
 pongs.onValue(function () {
+  const knownClients = gameState.knownClients;
   const knownKeys = Object.keys(knownClients);
   const curTime = process.hrtime();
   knownKeys.forEach(k => {
@@ -78,6 +92,7 @@ pongs.onValue(function () {
 });
 
 updates.onValue(function () {
+  const knownClients = gameState.knownClients;
   const knownKeys = Object.keys(knownClients);
   const curTime = process.hrtime();
   knownKeys.forEach(k => {
@@ -89,7 +104,7 @@ updates.onValue(function () {
 });
 
 app.get('/api', (req, res) => {
-  res.send(knownClients);
+  res.send(gameState);
 });
 
 app.listen(8080);

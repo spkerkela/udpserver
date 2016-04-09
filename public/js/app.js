@@ -1,5 +1,8 @@
 var rectWidth = 30;
-var gameState = {};
+var gameState = {
+  bombs:[],
+  knownClients: {}
+};
 setInterval(function() {
     fetch('api').then(function(response){
       return response.json();
@@ -14,9 +17,16 @@ function draw() {
   var ctx = canvas.getContext('2d');
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.fillStyle='green';
-  Object.keys(gameState).forEach(function (k) {
-    var position = gameState[k].position;
+  var knownClients =  gameState.knownClients;
+  gameState.bombs.forEach(function(bomb) {
+    ctx.fillStyle='yellow';
+    ctx.fillRect(rectWidth*bomb.x,rectWidth*bomb.y,rectWidth,rectWidth);
+  });
+  Object.keys(knownClients).forEach(function (k) {
+    ctx.fillStyle='green';
+    var player = knownClients[k];
+    var position = player.position;
     ctx.fillRect(rectWidth*position.x,rectWidth*position.y,rectWidth,rectWidth);
   });
-  window.requestAnimationFrame(draw);
+    window.requestAnimationFrame(draw);
 }
