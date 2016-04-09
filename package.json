@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "baconjs": "^0.7.84",
+    "express": "^4.13.4",
     "nodejs": "0.0.0"
   }
 }
