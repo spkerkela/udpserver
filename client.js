@@ -1,3 +1,4 @@
+'use strict';
 const B = require('baconjs');
 const PORT = 33333;
 const HOST = 'localhost';
@@ -8,11 +9,11 @@ const dgram = require('dgram');
 
 const client = dgram.createSocket('udp4');
 
-var lastCommFromServer = process.hrtime();
-var keepUpdating = true;
-var myPos =  {};
-var myPort = 0;
-var worldState = {};
+let lastCommFromServer = process.hrtime();
+let keepUpdating = true;
+let myPos =  {};
+let myPort = 0;
+let worldState = {};
 
 function send(msg) {
   const message = new Buffer(msg);
@@ -22,7 +23,7 @@ function send(msg) {
 }
 
 client.on('message', (message, remote) => {
-  var command = message.toString().split('::');
+  const command = message.toString().split('::');
   if(command[0] === 'ping') {
     lastCommFromServer = process.hrtime();
     send('pong');
@@ -38,7 +39,7 @@ client.on('message', (message, remote) => {
 });
 
 updater.takeWhile(() => keepUpdating).onValue(() => {
-  var curTime = process.hrtime();
+  const curTime = process.hrtime();
   if(curTime[0] - lastCommFromServer[0] > 1) {
     keepUpdating = false;
     console.log('server disconnected');

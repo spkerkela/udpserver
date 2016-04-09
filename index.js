@@ -1,3 +1,4 @@
+'use strict';
 const PORT = 33333;
 const HOST = 'localhost';
 
@@ -18,7 +19,7 @@ server.on('listening', () => {
 });
 
 server.on('message', (message, remote) => {
-  var remotePort = remote.port
+  const remotePort = remote.port
   if(!knownClients[remotePort]) {
     console.log(remotePort+ ' connected');
   }
@@ -53,7 +54,7 @@ pongs.onValue(function () {
   const knownKeys = Object.keys(knownClients);
   const curTime = process.hrtime();
   knownKeys.forEach(k => {
-    var message = new Buffer('ping');
+    const message = new Buffer('ping');
     server.send(message, 0, message.length, parseInt(k), 'localhost');
     if(tooLong(knownClients[k].lastComm, curTime)) {
       console.log(k,'disconnected');
@@ -68,9 +69,9 @@ updates.onValue(function () {
   knownKeys.forEach(k => {
     knownClients[k].position.x += 0.01;
     knownClients[k].position.y += 0.01;
-    var pos = new Buffer('set-pos::'+JSON.stringify(knownClients[k].position));
+    const pos = new Buffer('set-pos::'+JSON.stringify(knownClients[k].position));
     server.send(pos, 0, pos.length, parseInt(k), 'localhost');
-    var data = new Buffer('data::'+JSON.stringify(knownClients));
+    const data = new Buffer('data::'+JSON.stringify(knownClients));
     server.send(data, 0, data.length, parseInt(k), 'localhost');
   })
 });
