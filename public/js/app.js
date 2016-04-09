@@ -9,7 +9,6 @@ setInterval(function() {
     }).then(function(response) {
       gameState = response;
     });
-
   }, 10);
 
 function draw() {
@@ -23,8 +22,8 @@ function draw() {
     ctx.fillRect(rectWidth*bomb.position.x,rectWidth*bomb.position.y,rectWidth,rectWidth);
   });
   Object.keys(knownClients).forEach(function (k) {
-    ctx.fillStyle='green';
     var player = knownClients[k];
+    ctx.fillStyle = player.isAlive ? 'green' : 'red';
     var position = player.position;
     ctx.fillRect(rectWidth*position.x,rectWidth*position.y,rectWidth,rectWidth);
   });

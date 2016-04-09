@@ -35,7 +35,8 @@ server.on('message', (message, remote) => {
         lastComm: process.hrtime(),
         position: {x: 0, y: 0},
         bombs: 3,
-        hitPoints: 1
+        hitPoints: 1,
+        isAlive: true
       };
       var portMessage = new Buffer('port-is::'+remotePort);
       server.send(portMessage,0, portMessage.length, parseInt(remotePort), 'localhost');
@@ -61,8 +62,7 @@ server.on('message', (message, remote) => {
       break;
     case 'move-to':
       const direction = JSON.parse(command[1]);
-      if(direction) {
-        console.log(direction)
+      if(direction && knownClients[remotePort].isAlive) {
         let destination = {
           x: knownClients[remotePort].position.x + direction.x,
           y: knownClients[remotePort].position.y + direction.y
@@ -114,6 +114,9 @@ updates.onValue(function () {
           if(distance < Math.pow(radius, 2)) {
             console.log(k,'TOOK DAMAGE!!');
             knownClients[k].hitPoints--;
+            if(knownClients[k].hitPoints<=0) {
+              knownClients[k].isAlive = false;
+            }
           }
         })
       }

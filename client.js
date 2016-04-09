@@ -34,18 +34,21 @@ const directions = {
 }
 
 stdin.on('data', (key) => {
-    if(key==='\u0003') {
-      process.exit();
-    }
-    if(myPort === 0) {
-      return;
-    }
-    if(Object.keys(directions).indexOf(key) !== -1) {
-      send('move-to::'+JSON.stringify(directions[key]));
-    }
-    if(key==='b') {
-      send('set-bomb');
-    }
+  if(!keepUpdating) {
+    process.exit();
+  }
+  if(key==='\u0003') {
+    process.exit();
+  }
+  if(myPort === 0) {
+    return;
+  }
+  if(Object.keys(directions).indexOf(key) !== -1) {
+    send('move-to::'+JSON.stringify(directions[key]));
+  }
+  if(key==='b') {
+    send('set-bomb');
+  }
 });
 
 client.on('message', (message, remote) => {
