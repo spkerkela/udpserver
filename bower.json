@@ -1,0 +1,21 @@
+{
+  "name": "udpserver",
+  "description": "udp server",
+  "main": "index.js",
+  "authors": [
+    "Simo-Pekka Kerkelä <simopekka1990@gmail.com>"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/spkerkela/udpserver",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "three.js": "threejs#*"
+  }
+}
