@@ -13,6 +13,9 @@ var gameState = {
   bombs: [],
   knownClients: {}
 };
+
+var lastState = gameState;
+
 light.position.x = Math.random() - 0.5;
 light.position.y = Math.random() - 0.5;
 light.position.z = Math.random() - 0.5;
@@ -21,7 +24,8 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 var step = 5;
-var geometry = new THREE.BoxGeometry(step, step, step);
+var playerGeometry = new THREE.BoxGeometry(step, step, step);
+var bombGeometry = new THREE.SphereGeometry(step * 0.5, 32, 32);
 var gridGeometry = new THREE.Geometry();
 
 var size = step * 20 / 2;
@@ -36,6 +40,7 @@ for (var i = -size; i <= size; i += step) {
 
 var material = new THREE.MeshLambertMaterial({color: 0x00ff00, overdraw: 0.5});
 var bombMaterial = new THREE.MeshLambertMaterial({color: 0xff0000, overdraw: 0.5});
+var bombMaterial2 = new THREE.MeshLambertMaterial({color: 0xeeeeee, overdraw: 0.5});
 var lineMaterial = new THREE.LineBasicMaterial({color: 0xffff00, opacity: 0.2});
 var line = new THREE.LineSegments(gridGeometry, lineMaterial);
 var controls = new THREE.OrbitControls(camera);
@@ -57,30 +62,59 @@ setInterval(function () {
 }, 10);
 
 function pointToVec3(point) {
-  return new THREE.Vector3(-size + (point.x * step), 0, -size + (point.y * step));
+  return new THREE.Vector3(-size + (point.x * step) + step / 2, step / 2, -size + (point.y * step) + step / 2);
 }
 
 function update() {
   var knownClients = gameState.knownClients;
+  var lastStateClients = lastState.knownClients;
   var keys = Object.keys(knownClients);
+  var lastKeys = Object.keys(lastStateClients);
   keys.forEach(function (key) {
+    var player = knownClients[key];
     var maybeObject = scene.getObjectByName(key);
-    console.log(maybeObject);
-    var newPoint = pointToVec3(knownClients[key].position);
+    var newPoint = pointToVec3(player.position);
     if (!maybeObject) {
-      var obj = new THREE.Mesh(geometry, material);
-      obj.position.x = newPoint.x;
-      obj.position.y = newPoint.y;
-      obj.position.z = newPoint.z;
+      var obj = new THREE.Mesh(playerGeometry, material);
+      obj.position.set(newPoint.x, newPoint.y, newPoint.z);
       obj.name = key;
-      console.log('adding', obj);
       scene.add(obj);
     } else {
-      maybeObject.position.x = newPoint.x;
-      maybeObject.position.y = newPoint.y;
-      maybeObject.position.z = newPoint.z;
+      maybeObject.position.set(newPoint.x, newPoint.y, newPoint.z);
+      if (!player.isAlive) {
+        maybeObject.material = bombMaterial;
+      }
     }
-  })
+  });
+  gameState.bombs.forEach(function (bomb) {
+    var name = bomb.plantedAt[0] + '_' + bomb.plantedAt[1];
+    var newPoint = pointToVec3(bomb.position);
+    var maybeObject = scene.getObjectByName(name);
+    if (!maybeObject) {
+      var obj = new THREE.Mesh(bombGeometry, bombMaterial);
+      obj.position.set(newPoint.x, newPoint.y, newPoint.z);
+      obj.name = name;
+      scene.add(obj);
+    } else {
+      maybeObject.position.set(newPoint.x, newPoint.y, newPoint.z);
+      if (bomb.exploded) {
+        maybeObject.material = bombMaterial2;
+      }
+    }
+  });
+
+  var filtered = lastKeys.filter(function (lastKey) {
+    return keys.indexOf(lastKey) === -1;
+  });
+  filtered.forEach(function (keyToRemove) {
+    var maybeObjectToRemove = scene.getObjectByName(keyToRemove);
+    console.log(keyToRemove);
+    if (maybeObjectToRemove) {
+      scene.remove(maybeObjectToRemove);
+    }
+  });
+
+  lastState = gameState;
 }
 
 function render() {
