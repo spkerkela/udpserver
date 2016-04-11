@@ -108,7 +108,6 @@ function update() {
   });
   filtered.forEach(function (keyToRemove) {
     var maybeObjectToRemove = scene.getObjectByName(keyToRemove);
-    console.log(keyToRemove);
     if (maybeObjectToRemove) {
       scene.remove(maybeObjectToRemove);
     }
