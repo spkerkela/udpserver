@@ -11,6 +11,7 @@
   "dependencies": {
     "baconjs": "^0.7.84",
     "express": "^4.13.4",
+    "node-uuid": "^1.4.7",
     "nodejs": "0.0.0"
   }
 }

@@ -16,11 +16,11 @@ const client = udp.createSocket('udp4');
 let lastCommFromServer = process.hrtime();
 let keepUpdating = true;
 let myPos = {};
-let myPort = 0;
+let myId = '0';
 let worldState = {};
 
 function send(msg) {
-  const message = new Buffer(msg);
+  const message = new Buffer(myId + '::' + msg);
   client.send(message, 0, message.length, PORT, HOST, (err, bytes) => {
     if (err) throw err;
   });
@@ -40,7 +40,7 @@ stdin.on('data', (key) => {
   if (key === '\u0003') {
     process.exit();
   }
-  if (myPort === 0) {
+  if (myId === '0') {
     return;
   }
   if (Object.keys(directions).indexOf(key) !== -1) {
