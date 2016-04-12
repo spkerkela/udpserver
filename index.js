@@ -129,13 +129,12 @@ function sendDataToClients(knownClients) {
 updates.onValue(function () {
   const knownClients = gameState.knownClients;
   const bombs = gameState.bombs;
-  const knownKeys = Object.keys(knownClients);
 
   bombs.forEach(bomb => {
-    updateBombs(bomb, knownKeys, knownClients);
+    updateBombs(bomb, knownClients);
   });
 
-  sendDataToClients(knownKeys, knownClients);
+  sendDataToClients(knownClients);
 });
 
 app.get('/api', (req, res) => {
