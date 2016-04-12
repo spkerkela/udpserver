@@ -27,6 +27,7 @@ var step = 5;
 var playerGeometry = new THREE.BoxGeometry(step, step, step);
 var bombGeometry = new THREE.SphereGeometry(step * 0.5, 32, 32);
 var gridGeometry = new THREE.Geometry();
+var groundGeometry = new THREE.PlaneGeometry(20 * step, 20 * step);
 
 var size = step * 20 / 2;
 
@@ -42,23 +43,42 @@ var material = new THREE.MeshLambertMaterial({color: 0x00ff00, overdraw: 0.5});
 var bombMaterial = new THREE.MeshLambertMaterial({color: 0xff0000, overdraw: 0.5});
 var bombMaterial2 = new THREE.MeshLambertMaterial({color: 0xeeeeee, overdraw: 0.5});
 var lineMaterial = new THREE.LineBasicMaterial({color: 0xffff00, opacity: 0.2});
+var groundMaterial = new THREE.MeshLambertMaterial({color: 0xffff00, side: THREE.BackSide});
 var line = new THREE.LineSegments(gridGeometry, lineMaterial);
 var controls = new THREE.OrbitControls(camera);
+var groundPlane = new THREE.Mesh(groundGeometry, groundMaterial);
+groundPlane.rotateX(Math.PI / 2);
+
 scene.add(light);
 scene.add(ambientLight);
-scene.add(line);
-scene.add(arrowHelper);
+//scene.add(line);
+//scene.add(arrowHelper);
+scene.add(groundPlane);
 
 camera.position.z = 5 * step;
 camera.position.y = 5 * step;
 camera.position.x = 5 * step;
 
 setInterval(function () {
-  fetch('api').then(function (response) {
-    return response.json();
-  }).then(function (response) {
-    gameState = response;
-  });
+  var endpoint = 'api';
+  if (window.fetch) {
+    window.fetch(endpoint).then(function (response) {
+      return response.json();
+    }).then(function (response) {
+      gameState = response;
+    });
+  } else {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+      if(xhttp.readyState === 4 && xhttp.status === 200) {
+        gameState = JSON.parse(xhttp.responseText);
+      }
+    };
+
+    xhttp.open('GET', endpoint, true);
+    xhttp.send();
+  }
+
 }, 10);
 
 function pointToVec3(point) {
@@ -77,7 +97,10 @@ function update() {
     if (!maybeObject) {
       var obj = new THREE.Mesh(playerGeometry, material);
       obj.position.set(newPoint.x, newPoint.y, newPoint.z);
+      var playerLight = new THREE.PointLight(0xffff00, 1, 100);
+      playerLight.position.set(0, 15, 0);
       obj.name = key;
+      obj.add(playerLight);
       scene.add(obj);
     } else {
       maybeObject.position.set(newPoint.x, newPoint.y, newPoint.z);
@@ -92,8 +115,11 @@ function update() {
     var maybeObject = scene.getObjectByName(name);
     if (!maybeObject) {
       var obj = new THREE.Mesh(bombGeometry, bombMaterial);
-      obj.position.set(newPoint.x, newPoint.y, newPoint.z);
+      var bombLight = new THREE.PointLight(0xff0000, 1, 100);
+      bombLight.position.set(0, 15, 0);
+      obj.position.set(newPoint.x, newPoint.y, newPoint.z)
       obj.name = name;
+      obj.add(bombLight);
       scene.add(obj);
     } else {
       maybeObject.position.set(newPoint.x, newPoint.y, newPoint.z);

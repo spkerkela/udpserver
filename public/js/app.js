@@ -4,12 +4,26 @@ var gameState = {
   knownClients: {}
 };
 setInterval(function () {
-  fetch('api').then(function (response) {
-    return response.json();
-  }).then(function (response) {
-    gameState = response;
-  });
-}, 10);
+  var endpoint = 'api';
+  if (window.fetch) {
+    window.fetch(endpoint).then(function (response) {
+      return response.json();
+    }).then(function (response) {
+      gameState = response;
+    });
+  } else {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+      if (xhttp.readyState === 4 && xhttp.status === 200) {
+        gameState = JSON.parse(xhttp.responseText);
+      }
+    };
+
+    xhttp.open('GET', endpoint, true);
+    xhttp.send();
+  }
+
+}, 1000);
 
 function draw() {
   var canvas = document.getElementById('canvas');
