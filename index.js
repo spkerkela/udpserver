@@ -95,38 +95,47 @@ pongs.onValue(function () {
   })
 });
 
-updates.onValue(function () {
-  const knownClients = gameState.knownClients;
-  const bombs = gameState.bombs;
+function updateBombs(bomb, knownClients) {
   const knownKeys = Object.keys(knownClients);
-
-  bombs.forEach(bomb => {
-    if (!bomb.exploded) {
-      const end = process.hrtime(bomb.plantedAt);
-      if (end[0] > 3) {
-        bomb.exploded = true;
-        knownKeys.forEach(k => {
-          const pos = knownClients[k].position;
-          const distance = Math.pow(bomb.position.x - pos.x, 2) + Math.pow(bomb.position.y - pos.y, 2);
-          const radius = 5;
-          if (distance < Math.pow(radius, 2)) {
-            console.log(k, 'TOOK DAMAGE!!');
-            knownClients[k].hitPoints--;
-            if (knownClients[k].hitPoints <= 0) {
-              knownClients[k].isAlive = false;
-            }
+  if (!bomb.exploded) {
+    const end = process.hrtime(bomb.plantedAt);
+    if (end[0] > 3) {
+      bomb.exploded = true;
+      knownKeys.forEach(k => {
+        const pos = knownClients[k].position;
+        const distance = Math.pow(bomb.position.x - pos.x, 2) + Math.pow(bomb.position.y - pos.y, 2);
+        const radius = 5;
+        if (distance < Math.pow(radius, 2)) {
+          knownClients[k].hitPoints--;
+          if (knownClients[k].hitPoints <= 0) {
+            knownClients[k].isAlive = false;
           }
-        })
-      }
+        }
+      })
     }
-  });
+  }
+}
 
+function sendDataToClients(knownClients) {
+  const knownKeys = Object.keys(knownClients);
   knownKeys.forEach(k => {
     const pos = new Buffer('set-pos::' + JSON.stringify(knownClients[k].position));
     server.send(pos, 0, pos.length, parseInt(k), 'localhost');
     const data = new Buffer('data::' + JSON.stringify(gameState));
     server.send(data, 0, data.length, parseInt(k), 'localhost');
   })
+}
+
+updates.onValue(function () {
+  const knownClients = gameState.knownClients;
+  const bombs = gameState.bombs;
+  const knownKeys = Object.keys(knownClients);
+
+  bombs.forEach(bomb => {
+    updateBombs(bomb, knownKeys, knownClients);
+  });
+
+  sendDataToClients(knownKeys, knownClients);
 });
 
 app.get('/api', (req, res) => {
